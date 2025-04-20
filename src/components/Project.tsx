@@ -16,48 +16,33 @@ const Project: React.FC<ProjectProps> = ({ project }) => {
   const [title, setTitle] = useState(project.title);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  
+  const [filter, setFilter] = useState<'all' | 'completed' | 'incomplete'>('all');
+
   const progress = calculateProjectProgress(project);
   const totalTime = calculateProjectTime(project);
 
   const toggleExpand = () => {
-    dispatch({
-      type: 'TOGGLE_PROJECT_EXPAND',
-      payload: project.id,
-    });
+    dispatch({ type: 'TOGGLE_PROJECT_EXPAND', payload: project.id });
   };
 
   const handleDelete = () => {
-    dispatch({
-      type: 'DELETE_PROJECT',
-      payload: project.id,
-    });
+    dispatch({ type: 'DELETE_PROJECT', payload: project.id });
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  const handleEdit = () => setIsEditing(true);
 
   const handleSave = () => {
     if (title.trim() !== '') {
-      dispatch({
-        type: 'UPDATE_PROJECT',
-        payload: { id: project.id, title },
-      });
+      dispatch({ type: 'UPDATE_PROJECT', payload: { id: project.id, title } });
       setIsEditing(false);
     }
   };
 
-  const startAddTask = () => {
-    setIsAddingTask(true);
-  };
+  const startAddTask = () => setIsAddingTask(true);
 
   const handleAddTask = () => {
     if (newTaskTitle.trim() !== '') {
-      dispatch({
-        type: 'ADD_MAIN_TASK',
-        payload: { projectId: project.id, title: newTaskTitle },
-      });
+      dispatch({ type: 'ADD_MAIN_TASK', payload: { projectId: project.id, title: newTaskTitle } });
       setNewTaskTitle('');
       setIsAddingTask(false);
     }
@@ -70,7 +55,7 @@ const Project: React.FC<ProjectProps> = ({ project }) => {
 
   return (
     <div className="mb-6 bg-slate-800 p-5 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-start gap-2 mb-3">
         <button
           onClick={toggleExpand}
           className="p-1 rounded-full hover:bg-slate-700 transition-colors"
@@ -108,28 +93,33 @@ const Project: React.FC<ProjectProps> = ({ project }) => {
             </button>
           </div>
         ) : (
-          <>
-            <h2 className="text-xl font-semibold flex-1">{project.title}</h2>
-            <div className="flex items-center gap-3 text-slate-400">
-              <div className="flex items-center gap-1">
-                <Clock size={16} />
-                <span>{formatTime(totalTime)}</span>
+          <div className="flex-1 space-y-3">
+            <h1 className="text-xl md:text-3xl font-bold text-white">{project.title}</h1>
+
+            <div className="flex flex-col sm:flex-row gap-6 text-sm text-zinc-400">
+              <div>
+                <p className="text-xs mb-1">Total Estimated Time</p>
+                <div className="flex items-center gap-2">
+                  <Clock size={18} className="text-blue-400" />
+                  <span className="text-blue-400 font-extrabold text-2xl">{formatTime(totalTime)}</span>
+                </div>
               </div>
-              <span className="font-medium">{progress}%</span>
-              <button
-                onClick={handleEdit}
-                className="p-1 rounded hover:bg-slate-700 hover:text-slate-200 transition-colors"
-              >
-                <Edit size={18} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-1 rounded hover:bg-slate-700 hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={18} />
-              </button>
+
+              <div>
+                <p className="text-xs mb-1">Project Completion</p>
+                <span className="text-green-400 font-extrabold text-2xl">{progress}%</span>
+              </div>
+
+              <div className="flex items-center gap-2 sm:ml-auto">
+                <button onClick={handleEdit} className="p-2 rounded hover:bg-zinc-600 transition">
+                  <Edit size={18} className="text-zinc-400" />
+                </button>
+                <button onClick={handleDelete} className="p-2 rounded hover:bg-zinc-600 transition">
+                  <Trash2 size={18} className="text-red-400" />
+                </button>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
 
@@ -137,10 +127,30 @@ const Project: React.FC<ProjectProps> = ({ project }) => {
 
       {project.isExpanded && (
         <>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-slate-400">Filter tasks:</span>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as 'all' | 'completed' | 'incomplete')}
+              className="bg-slate-700 text-white px-3 py-1 rounded-md"
+            >
+              <option value="all">All</option>
+              <option value="completed">Completed</option>
+              <option value="incomplete">Incomplete</option>
+            </select>
+          </div>
+
           <div className="space-y-3 mt-4">
-            {project.mainTasks.map((task) => (
-              <MainTask key={task.id} task={task} projectId={project.id} />
-            ))}
+            {project.mainTasks
+              .filter((task) => {
+                if (filter === 'all') return true;
+                const isComplete =
+                  task.subtasks.length > 0 && task.subtasks.every((s) => s.completed);
+                return filter === 'completed' ? isComplete : !isComplete;
+              })
+              .map((task) => (
+                <MainTask key={task.id} task={task} projectId={project.id} filter={filter} />
+              ))}
 
             {isAddingTask ? (
               <div className="flex items-center gap-2 p-3 bg-slate-700 rounded-lg">

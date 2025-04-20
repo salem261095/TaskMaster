@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Undo2 } from 'lucide-react';
 import { useProjectContext } from '../context/ProjectContext';
 import Project from './Project';
 
 const ProjectList: React.FC = () => {
-  const { projects, dispatch } = useProjectContext();
+  const { projects, selectedProjectId, dispatch } = useProjectContext();
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
+
+  const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   const handleAddProject = () => {
     if (newProjectTitle.trim() !== '') {
@@ -22,7 +24,9 @@ const ProjectList: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto pt-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white">Projects</h1>
+        <h1 className="text-2xl font-bold text-white">
+          {selectedProject ? selectedProject.title : 'Projects'}
+        </h1>
         {!isAddingProject && (
           <button
             onClick={() => setIsAddingProject(true)}
@@ -77,6 +81,17 @@ const ProjectList: React.FC = () => {
           >
             <Plus size={18} />
             <span>Create your first project</span>
+          </button>
+        </div>
+      ) : selectedProject ? (
+        <div className="space-y-6">
+          <Project key={selectedProject.id} project={selectedProject} />
+          <button
+            onClick={() => dispatch({ type: 'SET_SELECTED_PROJECT', payload: '' })}
+            className="mt-6 flex items-center gap-2 text-sm text-blue-400 hover:underline"
+          >
+            <Undo2 size={16} />
+            Back to all projects
           </button>
         </div>
       ) : (

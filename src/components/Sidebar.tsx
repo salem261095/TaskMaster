@@ -8,7 +8,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onProjectClick }) => {
-  const { projects } = useProjectContext();
+  const { projects, dispatch } = useProjectContext();
 
   return (
     <div className="h-full flex flex-col">
@@ -26,7 +26,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onProjectClick }) => {
                 <div
                   key={project.id}
                   className="p-3 bg-slate-700 rounded-lg cursor-pointer hover:bg-slate-600 transition-colors"
-                  onClick={onProjectClick}
+                  onClick={() => {
+                    dispatch({ type: 'SET_SELECTED_PROJECT', payload: project.id });
+                    onProjectClick();
+                  }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-slate-200 truncate">

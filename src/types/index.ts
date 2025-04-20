@@ -104,8 +104,7 @@ export type ActionType =
       payload: { projectId: string; taskId: string; subtaskId: string };
     }
   | {
-      type: 'DUPLICATE_MAIN_TASK';
-      payload: { projectId: string; task: MainTask };
-    };
-
-    
+    type: 'DUPLICATE_MAIN_TASK';
+    payload: { projectId: string; task: MainTask };
+  }
+| { type: 'SET_SELECTED_PROJECT'; payload: string };

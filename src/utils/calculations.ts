@@ -1,11 +1,14 @@
 import { Project, MainTask } from '../types';
 
 export const calculateMainTaskProgress = (mainTask: MainTask): number => {
-  const { subtasks } = mainTask;
-  if (subtasks.length === 0) return 0;
-  const completedSubtasks = subtasks.filter((subtask) => subtask.completed).length;
-  return Math.round((completedSubtasks / subtasks.length) * 100);
+  const totalTime = mainTask.subtasks.reduce((sum, s) => sum + s.estimatedTime, 0);
+  if (totalTime === 0) return 0;
+  const completedTime = mainTask.subtasks
+    .filter((s) => s.completed)
+    .reduce((sum, s) => sum + s.estimatedTime, 0);
+  return Math.round((completedTime / totalTime) * 100);
 };
+
 
 export const calculateMainTaskTime = (mainTask: MainTask): number => {
   return mainTask.subtasks.reduce((total, subtask) => total + subtask.estimatedTime, 0);

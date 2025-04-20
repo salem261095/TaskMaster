@@ -23,9 +23,10 @@ import { v4 as uuidv4 } from "uuid";
 interface MainTaskProps {
   task: MainTaskType;
   projectId: string;
+  filter?: "all" | "completed" | "incomplete";
 }
 
-const MainTask: React.FC<MainTaskProps> = ({ task, projectId }) => {
+const MainTask: React.FC<MainTaskProps> = ({ task, projectId, filter = "all" }) => {
   const { dispatch } = useProjectContext();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -194,14 +195,20 @@ const MainTask: React.FC<MainTaskProps> = ({ task, projectId }) => {
 
       {task.isExpanded && (
         <div className="ml-5 mt-3 space-y-2">
-          {task.subtasks.map((subtask) => (
-            <Subtask
-              key={subtask.id}
-              subtask={subtask}
-              projectId={projectId}
-              taskId={task.id}
-            />
-          ))}
+          {task.subtasks
+            .filter((subtask) => {
+              if (filter === "completed") return subtask.completed;
+              if (filter === "incomplete") return !subtask.completed;
+              return true;
+            })
+            .map((subtask) => (
+              <Subtask
+                key={subtask.id}
+                subtask={subtask}
+                projectId={projectId}
+                taskId={task.id}
+              />
+            ))}
 
           {isAddingSubtask ? (
             <div className="pl-4 py-2 flex items-center gap-2 bg-slate-800 bg-opacity-50 rounded-md mt-2 transition-all">
