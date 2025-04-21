@@ -86,6 +86,58 @@ const projectReducer = (state: StateType, action: ActionType): StateType => {
       };
     }
 
+    case "TOGGLE_SUBTASK_COMPLETE": {
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? {
+                        ...task,
+                        subtasks: task.subtasks.map((subtask) =>
+                          subtask.id === action.payload.subtaskId
+                            ? { ...subtask, completed: !subtask.completed }
+                            : subtask
+                        ),
+                      }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+    }
+    case "ADD_SUBTASK": {
+      const newSubtask = {
+        id: uuidv4(),
+        title: action.payload.title,
+        estimatedTime: action.payload.estimatedTime,
+        completed: false,
+      };
+    
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? {
+                        ...task,
+                        subtasks: [...task.subtasks, newSubtask],
+                      }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+    }
+        
     default:
       return state;
   }
