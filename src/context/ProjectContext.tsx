@@ -117,7 +117,7 @@ const projectReducer = (state: StateType, action: ActionType): StateType => {
         estimatedTime: action.payload.estimatedTime,
         completed: false,
       };
-    
+
       return {
         ...state,
         projects: state.projects.map((project) =>
@@ -137,13 +137,164 @@ const projectReducer = (state: StateType, action: ActionType): StateType => {
         ),
       };
     }
-        
+    case "UPDATE_SUBTASK": {
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? {
+                        ...task,
+                        subtasks: task.subtasks.map((subtask) =>
+                          subtask.id === action.payload.subtaskId
+                            ? {
+                                ...subtask,
+                                title: action.payload.title,
+                                estimatedTime: action.payload.estimatedTime,
+                              }
+                            : subtask
+                        ),
+                      }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+    }
+    case "DELETE_SUBTASK":
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? {
+                        ...task,
+                        subtasks: task.subtasks.filter(
+                          (sub) => sub.id !== action.payload.subtaskId
+                        ),
+                      }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+
+    case "ADD_MAIN_TASK": {
+      const newTask = {
+        id: uuidv4(),
+        title: action.payload.title,
+        subtasks: [],
+        isExpanded: true,
+      };
+
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: [...project.mainTasks, newTask],
+              }
+            : project
+        ),
+      };
+    }
+
+    case "UPDATE_MAIN_TASK":
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? { ...task, title: action.payload.title }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+
+    case "DELETE_MAIN_TASK":
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.filter(
+                  (task) => task.id !== action.payload.taskId
+                ),
+              }
+            : project
+        ),
+      };
+
+    case "TOGGLE_MAIN_TASK_EXPAND":
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                mainTasks: project.mainTasks.map((task) =>
+                  task.id === action.payload.taskId
+                    ? { ...task, isExpanded: !task.isExpanded }
+                    : task
+                ),
+              }
+            : project
+        ),
+      };
+
+    case "DUPLICATE_MAIN_TASK": {
+      const { projectId, task } = action.payload;
+      const newTaskId = uuidv4();
+
+      const newSubtasks = task.subtasks.map((subtask) => ({
+        ...subtask,
+        id: uuidv4(),
+        completed: false,
+      }));
+
+      const newTask = {
+        id: newTaskId,
+        title: `${task.title} (copy)`,
+        subtasks: newSubtasks,
+        isExpanded: true,
+      };
+
+      return {
+        ...state,
+        projects: state.projects.map((project) =>
+          project.id === projectId
+            ? {
+                ...project,
+                mainTasks: [...project.mainTasks, newTask],
+              }
+            : project
+        ),
+      };
+    }
+
     default:
       return state;
   }
 };
 
-export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [state, dispatch] = useReducer(projectReducer, initialState);
 
   useEffect(() => {
